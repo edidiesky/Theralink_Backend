@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,32 +13,79 @@ model User {
   username      String    @unique
   password      String
   role          Role      @default(CLIENT)
-  resetToken       String?
+  resetToken    String?
   resetTokenExpiry DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  // Relations
+  appointments  Appointment[]  // A user (healthcare provider) can have many appointments
+
+  // Other fields based on your admin data management requirements
 }
 
 enum Role {
   ADMIN
-  CLIENT
+  CLIENT // A healthcare provider or patient role
 }
 
 enum Gender {
-    MALE
-    FEMALE
+  MALE
+  FEMALE
 }
 
 model Patient {
-    id            String    @id @default(uuid())
-    firstName     String
-    lastName      String
-    email         String    @unique
-    phone         String
-    gender        Gender
-    dateOfBirth   DateTime
-    address       String
-    medicalHistory Json?
-    createdAt     DateTime  @default(now())
-    updatedAt     DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  firstName     String
+  lastName      String
+  email         String    @unique
+  phone         String
+  gender        Gender
+  dateOfBirth   DateTime
+  address       String
+  medicalHistory Json?    // Optional medical history
+  intakeForm    IntakeForm?  // One intake form per patient
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relation to appointments
+  appointments  Appointment[]  // A patient can have many appointments
+}
+
+model Appointment {
+  id             String    @id @default(uuid())
+  date           DateTime
+  status         AppointmentStatus @default(PENDING)
+
+  // Relations
+  patientId      String
+  patient        Patient  @relation(fields: [patientId], references: [id])
+
+  healthcareProviderId String
+  healthcareProvider User @relation(fields: [healthcareProviderId], references: [id])
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum AppointmentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model IntakeForm {
+  id         String   @id @default(uuid())
+  patientId  String   @unique
+  patient    Patient  @relation(fields: [patientId], references: [id])
+
+  medicalHistory Json?
+  allergies      Json?
+  currentMedications Json?
+  emergencyContactName String?
+  emergencyContactPhone String?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
