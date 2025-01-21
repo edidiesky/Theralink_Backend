@@ -34,6 +34,13 @@ enum Gender {
   FEMALE
 }
 
+enum AppointmentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+
 model Patient {
   id            String    @id @default(uuid())
   firstName     String
@@ -58,9 +65,11 @@ model Appointment {
   date           DateTime
   status         AppointmentStatus @default(PENDING)
 
-  // Relations
+  // Relationship btw patient and appointment
   patientId      String
   patient        Patient  @relation(fields: [patientId], references: [id])
+
+  // Relationship btw appointment and doctor
 
   healthcareProviderId String
   healthcareProvider User @relation(fields: [healthcareProviderId], references: [id])
@@ -69,11 +78,7 @@ model Appointment {
   updatedAt      DateTime @updatedAt
 }
 
-enum AppointmentStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
-}
+
 
 model IntakeForm {
   id         String   @id @default(uuid())

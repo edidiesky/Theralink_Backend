@@ -1,23 +1,23 @@
 import { Request, Response } from "express";
 import prisma from "../config/database";
-import { IIAppointment } from "../interfaces/IAppointment.interfaces";
+import { IAppointment } from "../interfaces/appointment.interfaces";
 
 export class IAppointmentController {
-  async createIAppointment(req: Request<{}, {}, IIAppointment>, res: Response) {
+  async createIAppointment(req: Request<{}, {}, IAppointment>, res: Response) {
     try {
-      const { email, dateOfBirth, ...rest } = req.body;
+      const { date, status, ...rest } = req.body;
 
-      const newIAppointment = await prisma.IAppointment.create({
+      const newIAppointment = await prisma.appointment.create({
         data: {
           ...rest,
-          email,
-          dateOfBirth: new Date(dateOfBirth),
+          date,
+          status
         },
       });
 
       return res.status(201).json({
-        message: "IAppointment created successfully",
-        IAppointment: newIAppointment,
+        message: "Appointment created successfully",
+        appointment: newIAppointment,
       });
     } catch (error) {
       console.error("Create IAppointment error:", error);
@@ -27,7 +27,7 @@ export class IAppointmentController {
 
   async getIAppointments(_req: Request, res: Response) {
     try {
-      const IAppointments = await prisma.IAppointment.findMany({
+      const IAppointments = await prisma.appointment.findMany({
         orderBy: { createdAt: "desc" },
       });
       return res.status(200).json({ IAppointments });
@@ -40,12 +40,12 @@ export class IAppointmentController {
   async getIAppointmentById(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const IAppointment = await prisma.IAppointment.findUnique({
+      const IAppointment = await prisma.appointment.findUnique({
         where: { id },
       });
 
       if (!IAppointment) {
-        return res.status(404).json({ error: "IAppointment not found" });
+        return res.status(404).json({ error: "Appointment not found" });
       }
 
       return res.status(200).json({ IAppointment });
@@ -60,7 +60,7 @@ export class IAppointmentController {
       const { id } = req.params;
       const { dateOfBirth, ...rest } = req.body;
 
-      const IAppointment = await prisma.IAppointment.update({
+      const IAppointment = await prisma.appointment.update({
         where: { id },
         data: {
           ...rest,
@@ -69,7 +69,7 @@ export class IAppointmentController {
       });
 
       return res.status(200).json({
-        message: "IAppointment updated successfully",
+        message: "Appointment updated successfully",
         IAppointment,
       });
     } catch (error) {
@@ -81,12 +81,12 @@ export class IAppointmentController {
   async deleteIAppointment(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      await prisma.IAppointment.delete({
+      await prisma.appointment.delete({
         where: { id },
       });
 
       return res.status(200).json({
-        message: "IAppointment deleted successfully",
+        message: "Appointment deleted successfully",
       });
     } catch (error) {
       console.error("Delete IAppointment error:", error);
