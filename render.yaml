@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: theralink-api
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: theralink-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
