@@ -16,16 +16,16 @@ export default router;
 
 /**
  * @swagger
- * /api/appointments:
+ * /api/appointment:
  *   get:
- *     tags: [Appointments]
- *     summary: Get all appointments
+ *     tags: [Appointment]
+ *     summary: Get all appointment
  *     responses:
  *       200:
- *         description: List of appointments retrieved successfully
+ *         description: List of appointment retrieved successfully
  * 
  *   post:
- *     tags: [Appointments]
+ *     tags: [Appointment]
  *     summary: Create new patient
  *     requestBody:
  *       required: true
@@ -41,9 +41,9 @@ export default router;
  *                 type: string
  *                 format: date
  * 
- * /api/appointments/{id}:
+ * /api/appointment/{id}:
  *   get:
- *     tags: [Appointments]
+ *     tags: [Appointment]
  *     summary: Get patient by ID
  *     parameters:
  *       - in: path
@@ -53,7 +53,7 @@ export default router;
  *           type: string
  *   
  *   put:
- *     tags: [Appointments]
+ *     tags: [Appointment]
  *     summary: Update patient
  *     parameters:
  *       - in: path
@@ -63,7 +63,7 @@ export default router;
  *           type: string
  *   
  *   delete:
- *     tags: [Appointments]
+ *     tags: [Appointment]
  *     summary: Delete patient
  *     parameters:
  *       - in: path
