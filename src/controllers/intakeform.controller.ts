@@ -6,32 +6,12 @@ import { IUser } from "src/interfaces/auth.interfaces";
 export class IntakeFormController {
   async createIntakeForm(req: Request<{}, {}, IIntakeForm>, res: Response) {
     try {
-      const { date, status, patientid, ...rest } = req.body;
       const user = req.user as IUser | undefined;
-
-      // Checking if there's an existing IntakeForm at the same time for the same healthcare provider
-      const conflictingIntakeForm = await prisma.intakeForm.findFirst({
-        where: {
-          patientId: user?.id,
-        },
-      });
-
-      if (conflictingIntakeForm) {
-        return res.status(400).json({
-          error:
-            "The healthcare provider is already booked at this time. Please choose another time.",
-        });
-      }
 
       const newIntakeForm = await prisma.intakeForm.create({
         data: {
-          ...rest,
-          date,
-          status,
+          ...req.body,
           patient: {
-            connect: { id: patientid },
-          },
-          healthcareProvider: {
             connect: { id: user?.id },
           },
         },
@@ -53,7 +33,7 @@ export class IntakeFormController {
       const IntakeForms = await prisma.intakeForm.findMany({
         orderBy: { createdAt: "desc" },
         where: {
-          healthcareProviderId: user?.id,
+          patientId: user?.id,
         },
       });
       return res.status(200).json({ IntakeForms });
@@ -87,7 +67,7 @@ export class IntakeFormController {
       const { dateOfBirth, ...rest } = req.body;
       const user = req.user as IUser | undefined;
       const IntakeForm = await prisma.intakeForm.update({
-        where: { id, healthcareProviderId: user?.id },
+        where: { id, patientId: user?.id },
         data: {
           ...rest,
           dateOfBirth: new Date(dateOfBirth),
