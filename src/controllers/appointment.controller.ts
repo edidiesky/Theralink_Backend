@@ -13,7 +13,7 @@ export class AppointmentController {
       const conflictingAppointment = await prisma.appointment.findFirst({
         where: {
           healthcareProviderId: user?.id,
-          date: date, // Assuming you're storing the date as a single timestamp, adjust if necessary
+          date: date,
         },
       });
 
