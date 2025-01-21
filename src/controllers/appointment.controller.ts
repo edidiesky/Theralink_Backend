@@ -1,67 +1,94 @@
 import { Request, Response } from "express";
 import prisma from "../config/database";
 import { IAppointment } from "../interfaces/appointment.interfaces";
+import { IUser } from "src/interfaces/auth.interfaces";
 
-export class IAppointmentController {
-  async createIAppointment(req: Request<{}, {}, IAppointment>, res: Response) {
+export class AppointmentController {
+  async createAppointment(req: Request<{}, {}, IAppointment>, res: Response) {
     try {
-      const { date, status, ...rest } = req.body;
+      const { date, status, patientid, ...rest } = req.body;
+      const user = req.user as IUser | undefined;
 
-      const newIAppointment = await prisma.appointment.create({
+      // Checking if there's an existing appointment at the same time for the same healthcare provider
+      const conflictingAppointment = await prisma.appointment.findFirst({
+        where: {
+          healthcareProviderId: user?.id,
+          date: date, // Assuming you're storing the date as a single timestamp, adjust if necessary
+        },
+      });
+
+      if (conflictingAppointment) {
+        return res.status(400).json({
+          error:
+            "The healthcare provider is already booked at this time. Please choose another time.",
+        });
+      }
+
+      const newAppointment = await prisma.appointment.create({
         data: {
           ...rest,
           date,
-          status
+          status,
+          patient: {
+            connect: { id: patientid },
+          },
+          healthcareProvider: {
+            connect: { id: user?.id },
+          },
         },
       });
 
       return res.status(201).json({
         message: "Appointment created successfully",
-        appointment: newIAppointment,
+        appointment: newAppointment,
       });
     } catch (error) {
-      console.error("Create IAppointment error:", error);
-      return res.status(500).json({ error: "Failed to create IAppointment" });
+      console.error("Create Appointment error:", error);
+      return res.status(500).json({ error: "Failed to create Appointment" });
     }
   }
 
-  async getIAppointments(_req: Request, res: Response) {
+  async getAppointments(req: Request, res: Response) {
+    const user = req.user as IUser | undefined;
     try {
-      const IAppointments = await prisma.appointment.findMany({
+      const Appointments = await prisma.appointment.findMany({
         orderBy: { createdAt: "desc" },
+        where: {
+          healthcareProviderId: user?.id,
+        },
       });
-      return res.status(200).json({ IAppointments });
+      return res.status(200).json({ Appointments });
     } catch (error) {
-      console.error("Get IAppointments error:", error);
-      return res.status(500).json({ error: "Failed to fetch IAppointments" });
+      console.error("Get Appointments error:", error);
+      return res.status(500).json({ error: "Failed to fetch Appointments" });
     }
   }
 
-  async getIAppointmentById(req: Request, res: Response) {
+  async getAppointmentById(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const IAppointment = await prisma.appointment.findUnique({
+      const Appointment = await prisma.appointment.findUnique({
         where: { id },
       });
 
-      if (!IAppointment) {
+      if (!Appointment) {
         return res.status(404).json({ error: "Appointment not found" });
       }
 
-      return res.status(200).json({ IAppointment });
+      return res.status(200).json({ Appointment });
     } catch (error) {
-      console.error("Get IAppointment error:", error);
-      return res.status(500).json({ error: "Failed to fetch IAppointment" });
+      console.error("Get Appointment error:", error);
+      return res.status(500).json({ error: "Failed to fetch Appointment" });
     }
   }
 
-  async updateIAppointment(req: Request, res: Response) {
+  async updateAppointment(req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { dateOfBirth, ...rest } = req.body;
-
-      const IAppointment = await prisma.appointment.update({
-        where: { id },
+      const user = req.user as IUser | undefined;
+      const Appointment = await prisma.appointment.update({
+        where: { id, healthcareProviderId: user?.id },
         data: {
           ...rest,
           dateOfBirth: new Date(dateOfBirth),
@@ -70,15 +97,15 @@ export class IAppointmentController {
 
       return res.status(200).json({
         message: "Appointment updated successfully",
-        IAppointment,
+        Appointment,
       });
     } catch (error) {
-      console.error("Update IAppointment error:", error);
-      return res.status(500).json({ error: "Failed to update IAppointment" });
+      console.error("Update Appointment error:", error);
+      return res.status(500).json({ error: "Failed to update Appointment" });
     }
   }
 
-  async deleteIAppointment(req: Request, res: Response) {
+  async deleteAppointment(req: Request, res: Response) {
     try {
       const { id } = req.params;
       await prisma.appointment.delete({
@@ -89,8 +116,8 @@ export class IAppointmentController {
         message: "Appointment deleted successfully",
       });
     } catch (error) {
-      console.error("Delete IAppointment error:", error);
-      return res.status(500).json({ error: "Failed to delete IAppointment" });
+      console.error("Delete Appointment error:", error);
+      return res.status(500).json({ error: "Failed to delete Appointment" });
     }
   }
 }

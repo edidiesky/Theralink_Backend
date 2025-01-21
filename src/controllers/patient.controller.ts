@@ -6,7 +6,7 @@ export class PatientController {
   async createPatient(req: Request<{}, {}, IPatient>, res: Response) {
     try {
       const { email, dateOfBirth, ...rest } = req.body;
-
+   
       const newPatient = await prisma.patient.create({
         data: {
           ...rest,
