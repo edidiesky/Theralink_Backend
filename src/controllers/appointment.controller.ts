@@ -50,14 +50,30 @@ export class AppointmentController {
 
   async getAppointments(req: Request, res: Response) {
     const user = req.user as IUser | undefined;
+    const { page = "1", limit = "10" } = req.query;
+
+    const parsedPage = Math.max(1, parseInt(page as string, 10));
+    const parsedLimit = Math.max(1, parseInt(limit as string, 10));
     try {
       const Appointments = await prisma.appointment.findMany({
         orderBy: { createdAt: "desc" },
         where: {
           healthcareProviderId: user?.id,
         },
+        skip: (parsedPage - 1) * parsedLimit,
+        take: parsedLimit,
       });
-      return res.status(200).json({ Appointments });
+      const totalCount = await prisma.appointment.count({
+        where: { healthcareProviderId: user?.id },
+      });
+      return res
+        .status(200)
+        .json({
+          totalCount,
+          totalPages: Math.ceil(totalCount / parsedLimit),
+          currentPage: parsedPage,
+          Appointments,
+        });
     } catch (error) {
       console.error("Get Appointments error:", error);
       return res.status(500).json({ error: "Failed to fetch Appointments" });
